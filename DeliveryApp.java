@@ -179,7 +179,7 @@ public class DeliveryApp {
                 case 2:
                     System.out.print("Enter the food item name: ");
                     String foodName = scanner.nextLine();
-                    customer.placeOrder(foodName, foodManager, orders, registeredDeliveryStaff);
+                    customer.placeOrder(foodName, foodManager, orders);
                     break;
                 case 3:
                     customer.checkOrderStatus(orders);
@@ -239,7 +239,19 @@ public class DeliveryApp {
                     showAvailableOrders();
                     break;
                 case 2:
-                    startDelivery(deliveryStaff , scanner);
+                    Order orderToDeliver = orders.stream()
+                        .filter(order -> !order.isCompleted() && order.getAssignedStaff() == null)
+                        .findFirst().orElse(null);
+
+                    if (orderToDeliver == null){
+                        System.out.println("No orders to deliver.");
+                        break;
+                    }
+                    orderToDeliver.setAssignedStaff(deliveryStaff);
+                    deliveryStaff.startDelivery(orderToDeliver, scanner);
+
+                    List<String> commands = deliveryStaff.generateDeliveryCommands(orderToDeliver.getRemainingTicks());
+                    deliveryStaff.performDelivery(commands, scanner);
                     break;
                 case 3:
                     loggedIn = false;
@@ -251,18 +263,18 @@ public class DeliveryApp {
         }
     }
 
-    private static void startDelivery(DeliveryStaff deliveryStaff, Scanner scanner) {
-        Order orderToDeliver = orders.stream()
-                .filter(order -> !order.isCompleted() && order.getAssignedStaff() == null)
-                .findFirst()
-                .orElse(null);
-        if (orderToDeliver == null) {
-            System.out.println("No available orders to deliver.");
-            return;
-        }
-        orderToDeliver.setAssignedStaff(deliveryStaff);
-        deliveryStaff.startDelivery(orderToDeliver, scanner);
-    }
+//    private static void startDelivery(DeliveryStaff deliveryStaff, Scanner scanner) {
+//        Order orderToDeliver = orders.stream()
+//                .filter(order -> !order.isCompleted() && order.getAssignedStaff() == null)
+//                .findFirst()
+//                .orElse(null);
+//        if (orderToDeliver == null) {
+//            System.out.println("No available orders to deliver.");
+//            return;
+//        }
+//        orderToDeliver.setAssignedStaff(deliveryStaff);
+//        deliveryStaff.startDelivery(orderToDeliver, scanner);
+//    }
 
     private static void foodManagerMenu(Scanner scanner) {
         FoodManager currentFoodManager = (FoodManager) currentUser ;
@@ -323,6 +335,9 @@ public class DeliveryApp {
     }
 
     private static void saveDataAndExit(Scanner scanner) {
+        for(DeliveryStaff deliveryStaff : registeredDeliveryStaff){
+            deliveryStaff.setAvailable(true);
+        }
         fileManager.saveDeliveryStaff(registeredDeliveryStaff);
         fileManager.saveOrders(orders);
         fileManager.saveCustomers(registeredUsers);

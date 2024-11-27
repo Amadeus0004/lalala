@@ -5,13 +5,14 @@ import java.util.*;
 public class DeliveryStaff implements User {
     private final String name;
     private final String id;
-    private boolean available;
+    private boolean isAvailable;
     private Order currentOrder;
+    private static final Random RANDOM = new Random();
 
     public DeliveryStaff(String name, String id) {
         this.name = name;
         this.id = id;
-        this.available = true;
+        this.isAvailable = true;
     }
 
     public String getName() {
@@ -23,64 +24,70 @@ public class DeliveryStaff implements User {
     }
 
     public boolean isAvailable() {
-        return available;
-    }
-
-    public void setAvailable(boolean available) {
-        this.available = available;
+        return isAvailable;
     }
 
     public void startDelivery(Order order, Scanner scanner) {
-        if (!available) {
-            System.out.println("You are already on a delivery.");
+        this.currentOrder = order;
+        this.isAvailable = false;
+
+        if (isAvailable == false) {
+            displayMessage("You are already on a delivery.");
             return;
         }
-        this.currentOrder = order;
-        this.available = false;
+
 
         List<String> deliveryCommands = generateDeliveryCommands(order.getRemainingTicks());
+        displayMessage("Delivery started for order: " + order.getPizzaType());
+        displayMessage("Follow the delivery instructions carefully!");
 
-        System.out.println("Delivery started for order: " + order.getPizzaType());
-        System.out.println("Follow the delivery instructions carefully!");
-
-        boolean deliverySuccessful = performDelivery(deliveryCommands, scanner);
-
-        if (deliverySuccessful) {
+        if (performDelivery(deliveryCommands, scanner)) {
             completeDelivery();
         } else {
-            System.out.println("Delivery failed. Returning to shop.");
-            this.available = true;
-            this.currentOrder = null;
+            displayMessage("Delivery failed. Returning to shop.");
+            resetDeliveryState();
         }
     }
 
-    private List<String> generateDeliveryCommands(int ticks) {
+    public List<String> generateDeliveryCommands(int ticks) {
         List<String> directions = Arrays.asList("LEFT", "RIGHT", "STRAIGHT");
         List<String> commands = new ArrayList<>();
-        Random random = new Random();
         for (int i = 0; i < ticks; i++) {
-            String direction = directions.get(random.nextInt(directions.size()));
-            commands.add(direction);
+            commands.add(directions.get(RANDOM.nextInt(directions.size())));
         }
         commands.add("STOP");
         return commands;
     }
-
-    private boolean performDelivery(List<String> commands, Scanner scanner) {
-        System.out.println("Delivery Instructions: ");
+    public boolean performDelivery(List<String> commands, Scanner scanner) {
+        displayMessage("Delivery Instructions: ");
+        int retries = 3; // Max retries per command
+        int leftTicks = currentOrder.getRemainingTicks();
         for (String command : commands) {
-            while (true) {
-                System.out.println("Enter the next command (Hint: " + command + "): ");
+            while (retries > 0) {
+                displayMessage("Enter the next command (Hint: " + command + "): ");
                 String userInput = scanner.nextLine().toUpperCase();
 
                 if (userInput.equals(command)) {
+                    leftTicks--;
+                    if (leftTicks == 0){
+                        currentOrder.setCompleted(true);
+                        System.out.println("The order is completed");
+                        break;
+                    }
                     break; // Correct command
                 } else if (userInput.equals("HELP")) {
-                    System.out.println("Possible commands are: LEFT, RIGHT, STRAIGHT, STOP");
+                    displayMessage("Possible commands are: LEFT, RIGHT, STRAIGHT, STOP");
                 } else {
-                    System.out.println("Incorrect command. Try again or type HELP.");
+                    retries--;
+                    if (retries > 0) {
+                        displayMessage("Incorrect command. You have " + retries + " retries left.");
+                    } else {
+                        displayMessage("Delivery failed due to too many incorrect commands.");
+                        return false;
+                    }
                 }
             }
+            retries = 3; // Reset retries for the next command
         }
         return true;
     }
@@ -88,9 +95,21 @@ public class DeliveryStaff implements User {
     private void completeDelivery() {
         if (currentOrder != null) {
             currentOrder.setCompleted(true);
-            System.out.println("Delivery completed successfully!");
-            this.available = true;
-            this.currentOrder = null;
+            displayMessage("Delivery completed successfully!");
+            resetDeliveryState();
         }
+    }
+
+    private void resetDeliveryState() {
+        this.isAvailable = true;
+        this.currentOrder = null;
+    }
+
+    private void displayMessage(String message) {
+        System.out.println(message);
+    }
+
+    public void setAvailable(boolean isAvailable) {
+        this.isAvailable = isAvailable;
     }
 }

@@ -6,13 +6,12 @@ public class Order {
     private int remainingTicks;
     private boolean completed;
     private DeliveryStaff assignedStaff;
-    private static final int MAX_ORDER_TICKS = 100; // Example timeout
-    private int elapsedTicks = 0;
+    private static final int MAX_ORDER_TICKS = 100;
 
     public Order(String customerName, String pizzaType, int deliveryTime, boolean completed) {
         this.customerName = customerName;
         this.pizzaType = pizzaType;
-        this.remainingTicks = deliveryTime; // Assuming deliveryTime is represented in ticks
+        this.remainingTicks = deliveryTime;
         this.completed = completed;
     }
 
@@ -26,6 +25,10 @@ public class Order {
 
     public int getRemainingTicks() {
         return remainingTicks;
+    }
+
+    public void setRemainingTicks(int remainingTicks) {
+        this.remainingTicks = remainingTicks;
     }
 
     public boolean isCompleted() {
@@ -44,23 +47,15 @@ public class Order {
         this.assignedStaff = assignedStaff;
     }
 
-    public void setRemainingTicks(int remainingTicks) {
-        this.remainingTicks = remainingTicks;
-    }
-
-    public String getFoodName() {
-        return pizzaType;
-    }
-
     public void incrementTicks() {
-        elapsedTicks++;
-        if (elapsedTicks > MAX_ORDER_TICKS) {
+        remainingTicks--;
+        if (remainingTicks <= 0) {
             cancelOrder();
         }
     }
 
     private void cancelOrder() {
         this.completed = true;
-        System.out.println("Order cancelled due to timeout");
+        System.out.println("Order for " + customerName + " has been cancelled due to timeout.");
     }
 }
