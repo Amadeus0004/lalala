@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Scanner;
 
 public class DeliveryApp {
-    private static List<DeliveryStaff> deliveryStaffList = new ArrayList<>();
+    //private static List<DeliveryStaff> deliveryStaffList = new ArrayList<>();
     private static List<Order> orders = new ArrayList<>();
     private static List<Customer> registeredUsers = new ArrayList<>();
     private static List<KitchenStaff> registeredKitchenStaff = new ArrayList<>();
@@ -19,11 +19,12 @@ public class DeliveryApp {
 
     public static void main(String[] args) {
         foodManager.loadMenu();
-        deliveryStaffList = fileManager.loadDeliveryStaff();
+        registeredDeliveryStaff = fileManager.loadDeliveryStaff();
         orders = fileManager.loadOrders();
         registeredUsers = fileManager.loadCustomers();
         registeredKitchenStaff = fileManager.loadKitchenStaff();
         registeredFoodManagers = fileManager.loadFoodManagers();
+        //System.out.println(deliveryStaffList);
         Scanner scanner = new Scanner(System.in);
         boolean running = true;
 
@@ -95,7 +96,7 @@ public class DeliveryApp {
                 id = generateUniqueId("deliverystaff");
                 DeliveryStaff deliveryStaff = new DeliveryStaff(name, id);
                 registeredDeliveryStaff.add(deliveryStaff);
-                deliveryStaffList.add(deliveryStaff);
+                //deliveryStaffList.add(deliveryStaff);
                 System.out.println("Registered successfully as Delivery Staff. Your ID is: " + id);
                 break;
             case 4:
@@ -178,7 +179,7 @@ public class DeliveryApp {
                 case 2:
                     System.out.print("Enter the food item name: ");
                     String foodName = scanner.nextLine();
-                    customer.placeOrder(foodName, foodManager, orders, deliveryStaffList);
+                    customer.placeOrder(foodName, foodManager, orders, registeredDeliveryStaff);
                     break;
                 case 3:
                     customer.checkOrderStatus(orders);
@@ -238,7 +239,7 @@ public class DeliveryApp {
                     showAvailableOrders();
                     break;
                 case 2:
-                    startDelivery(scanner, deliveryStaff);
+                    startDelivery(deliveryStaff , scanner);
                     break;
                 case 3:
                     loggedIn = false;
@@ -250,7 +251,7 @@ public class DeliveryApp {
         }
     }
 
-    private static void startDelivery(Scanner scanner, DeliveryStaff deliveryStaff) {
+    private static void startDelivery(DeliveryStaff deliveryStaff, Scanner scanner) {
         Order orderToDeliver = orders.stream()
                 .filter(order -> !order.isCompleted() && order.getAssignedStaff() == null)
                 .findFirst()
@@ -322,7 +323,7 @@ public class DeliveryApp {
     }
 
     private static void saveDataAndExit(Scanner scanner) {
-        fileManager.saveDeliveryStaff(deliveryStaffList);
+        fileManager.saveDeliveryStaff(registeredDeliveryStaff);
         fileManager.saveOrders(orders);
         fileManager.saveCustomers(registeredUsers);
         fileManager.saveFoodManagers(registeredFoodManagers);

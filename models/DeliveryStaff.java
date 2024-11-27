@@ -3,8 +3,8 @@ package models;
 import java.util.*;
 
 public class DeliveryStaff implements User {
-    private String name;
-    private String id;
+    private final String name;
+    private final String id;
     private boolean available;
     private Order currentOrder;
 
